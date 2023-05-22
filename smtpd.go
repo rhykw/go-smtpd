@@ -46,6 +46,7 @@ type Server struct {
 	Authenticator func(peer Peer, username, password string) error
 
 	EnableXCLIENT       bool // Enable XCLIENT support (default: false)
+	EnableXFORWARD      bool // Enable XFORWARD support (default: false)
 	EnableProxyProtocol bool // Enable proxy protocol support (default: false)
 
 	TLSConfig *tls.Config // Enable STARTTLS support.
@@ -55,10 +56,10 @@ type Server struct {
 
 	// mu guards doneChan and makes closing it and listener atomic from
 	// perspective of Serve()
-	mu sync.Mutex
-	doneChan chan struct{}
-	listener *net.Listener
-	waitgrp sync.WaitGroup
+	mu         sync.Mutex
+	doneChan   chan struct{}
+	listener   *net.Listener
+	waitgrp    sync.WaitGroup
 	inShutdown atomicBool // true when server is in shutdown
 }
 
@@ -228,7 +229,7 @@ func (srv *Server) Shutdown(wait bool) error {
 	// First close the listener
 	srv.mu.Lock()
 	if srv.listener != nil {
-		lnerr = (*srv.listener).Close();
+		lnerr = (*srv.listener).Close()
 	}
 	srv.closeDoneChanLocked()
 	srv.mu.Unlock()
@@ -254,7 +255,7 @@ func (srv *Server) Wait() error {
 
 // Address returns the listening address of the server
 func (srv *Server) Address() net.Addr {
-	return (*srv.listener).Addr();
+	return (*srv.listener).Addr()
 }
 
 func (srv *Server) configureDefaults() {
@@ -408,6 +409,10 @@ func (session *session) extensions() []string {
 		extensions = append(extensions, "XCLIENT")
 	}
 
+	if session.server.EnableXFORWARD {
+		extensions = append(extensions, "XFORWARD")
+	}
+
 	if session.server.TLSConfig != nil && !session.tls {
 		extensions = append(extensions, "STARTTLS")
 	}
@@ -432,7 +437,6 @@ func (session *session) close() {
 	time.Sleep(200 * time.Millisecond)
 	session.conn.Close()
 }
-
 
 // From net/http/server.go
 
