@@ -118,6 +118,10 @@ func (session *session) handle(line string) {
 		session.handleXCLIENT(cmd)
 		return
 
+	case "XFORWARD":
+		session.handleXCLIENT(cmd)
+		return
+
 	}
 
 	session.reply(502, "Unsupported command.")
