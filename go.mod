@@ -1,3 +1,3 @@
-module github.com/chrj/smtpd
+module github.com/rhykw/go-smtpd
 
 go 1.14
